@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080b14">
+<title>PULSE — Tap Tempo Metronome</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #080b14;
+    --surface: rgba(18, 23, 39, .82);
+    --surface-2: #11182a;
+    --surface-3: #0b1020;
+    --line: rgba(159, 179, 228, .15);
+    --line-hot: rgba(115, 237, 219, .42);
+    --text: #f2f5ff;
+    --muted: #8e9ab7;
+    --mint: #75f2d1;
+    --cyan: #62c7ff;
+    --violet: #9d8bff;
+    --pink: #ff7bc4;
+    --danger: #ff8297;
+    --shadow: 0 28px 90px rgba(0, 0, 0, .42);
+  }
+  * { box-sizing: border-box; }
+  html { min-height: 100%; background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh; padding: 30px 22px 24px; color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+      radial-gradient(ellipse at 12% -4%, rgba(83, 111, 255, .21), transparent 35%),
+      radial-gradient(ellipse at 94% 18%, rgba(60, 226, 195, .12), transparent 31%),
+      radial-gradient(ellipse at 50% 110%, rgba(127, 80, 237, .12), transparent 43%),
+      var(--bg);
+    overflow-x: hidden;
+  }
+  button, input { font: inherit; }
+  button { -webkit-tap-highlight-color: transparent; }
+  .app { width: min(100%, 1040px); margin: 0 auto; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:28px; }
+  .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+  .brand-mark {
+    width:46px; height:46px; display:grid; place-items:center; flex:none; border-radius:15px;
+    background: linear-gradient(145deg, rgba(117,242,209,.19), rgba(98,199,255,.12));
+    border:1px solid rgba(117,242,209,.28); box-shadow: inset 0 1px rgba(255,255,255,.08), 0 8px 30px rgba(39,219,193,.08);
+  }
+  .brand-mark svg { width:27px; height:27px; }
+  .brand-name { font-size:1.08rem; font-weight:900; letter-spacing:.18em; line-height:1.1; }
+  .brand-sub { font-size:.68rem; color:var(--muted); letter-spacing:.14em; text-transform:uppercase; margin-top:5px; }
+  .live-chip { display:flex; align-items:center; gap:8px; padding:9px 12px; border:1px solid var(--line); border-radius:999px; color:#bac5df; background:rgba(15,21,36,.62); font-size:.76rem; white-space:nowrap; }
+  .live-dot { width:7px; height:7px; background:#77829b; border-radius:50%; box-shadow:0 0 0 4px rgba(119,130,155,.12); }
+  .live-chip.playing .live-dot { background:var(--mint); box-shadow:0 0 0 4px rgba(117,242,209,.13), 0 0 13px rgba(117,242,209,.8); }
+  .headline { margin:0 0 8px; font-size:clamp(2rem, 5vw, 3.25rem); line-height:1.03; letter-spacing:-.065em; font-weight:850; }
+  .headline span { color:var(--mint); }
+  .subtitle { margin:0 0 25px; color:var(--muted); font-size:.98rem; line-height:1.65; max-width:640px; }
+  .workspace { display:grid; grid-template-columns:minmax(0, 1.13fr) minmax(330px, .87fr); gap:17px; align-items:stretch; }
+  .card {
+    min-width:0; position:relative; border:1px solid var(--line); border-radius:25px;
+    background:linear-gradient(145deg, rgba(21,28,47,.91), rgba(12,17,31,.94));
+    box-shadow:var(--shadow); overflow:hidden; backdrop-filter:blur(16px);
+  }
+  .card::before { content:""; position:absolute; inset:0 0 auto; height:1px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent); pointer-events:none; }
+  .main-card { padding:clamp(20px, 3.5vw, 32px); }
+  .section-kicker { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.15em; font-weight:800; font-size:.7rem; }
+  .section-kicker .icon-label { display:flex; align-items:center; gap:9px; }
+  .section-kicker svg { width:16px; height:16px; color:var(--mint); }
+  .setting-badge { color:#b5c2df; letter-spacing:.04em; text-transform:none; font-size:.72rem; font-weight:650; border:1px solid var(--line); background:rgba(255,255,255,.025); padding:6px 9px; border-radius:999px; }
+  .tempo-block { padding:25px 0 20px; text-align:center; }
+  .tempo-readout { display:flex; align-items:baseline; justify-content:center; gap:11px; margin:0; font-variant-numeric:tabular-nums; }
+  .tempo-number { font-size:clamp(4.3rem, 12vw, 7.4rem); font-weight:900; line-height:.98; letter-spacing:-.085em; background:linear-gradient(180deg, #f7fffe 8%, #8af5de 64%, #66d9ff 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 7px 25px rgba(89,237,211,.11)); }
+  .tempo-unit { color:#a0b0cc; font-size:.95rem; font-weight:800; letter-spacing:.12em; }
+  .tempo-caption { color:var(--muted); font-size:.78rem; margin-top:10px; }
+  .tempo-input-wrap { position:relative; margin:0 auto; width:min(100%, 335px); }
+  .field-input {
+    appearance:none; width:100%; min-width:0; background:rgba(5,9,19,.66); color:var(--text);
+    border:1px solid rgba(142,165,213,.23); border-radius:14px; padding:14px 15px; outline:none;
+    font-size:1.13rem; font-weight:800; text-align:center; font-variant-numeric:tabular-nums;
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.15); transition:border-color .18s, box-shadow .18s;
+  }
+  .field-input:focus { border-color:rgba(98,199,255,.75); box-shadow:0 0 0 4px rgba(98,199,255,.1); }
+  .field-input.invalid { border-color:var(--danger); box-shadow:0 0 0 4px rgba(255,130,151,.08); }
+  .field-help { min-height:1.2rem; color:#7685a5; font-size:.74rem; margin-top:7px; text-align:center; line-height:1.45; }
+  .field-help.error { color:var(--danger); }
+  .meter-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; margin-top:4px; }
+  .field-label { display:block; margin-bottom:8px; color:#a9b5d0; font-size:.77rem; font-weight:750; letter-spacing:.035em; }
+  .field-label span { color:#71809f; font-weight:550; }
+  .meter-row .field-input { text-align:left; padding:13px 14px; }
+  .meter-row .field-help { text-align:left; font-size:.7rem; }
+  .tap-card {
+    margin-top:21px; padding:16px; border:1px solid rgba(117,242,209,.19); border-radius:20px;
+    background:linear-gradient(135deg, rgba(45,92,100,.16), rgba(53,43,96,.16));
+  }
+  .tap-top { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:13px; }
+  .tap-title { display:flex; align-items:center; gap:9px; font-weight:850; font-size:.94rem; }
+  .tap-title svg { width:19px; height:19px; color:var(--mint); }
+  .tap-count { color:var(--muted); font-size:.73rem; white-space:nowrap; }
+  .tap-button {
+    width:100%; min-height:72px; padding:16px 18px; position:relative; isolation:isolate; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; gap:12px; cursor:pointer;
+    border-radius:15px; border:1px solid rgba(130,251,222,.55); color:#061a1a;
+    background:linear-gradient(105deg, #79f3d3, #a3f8dc 45%, #7bdffb);
+    box-shadow:0 8px 28px rgba(66,223,197,.12), inset 0 1px rgba(255,255,255,.7);
+    font-size:1.03rem; font-weight:900; letter-spacing:.01em; transition:transform .11s, filter .16s, box-shadow .16s;
+  }
+  .tap-button::before { content:""; position:absolute; inset:-80% 45%; background:rgba(255,255,255,.32); transform:rotate(30deg); z-index:-1; pointer-events:none; }
+  .tap-button:hover { filter:brightness(1.06); box-shadow:0 10px 32px rgba(66,223,197,.22), inset 0 1px rgba(255,255,255,.7); }
+  .tap-button:active, .tap-button.tapped { transform:scale(.985); filter:brightness(1.11); }
+  .tap-button svg { width:23px; height:23px; flex:none; }
+  .tap-button:focus-visible, button:focus-visible { outline:3px solid rgba(98,199,255,.85); outline-offset:3px; }
+  .tap-hint { text-align:center; font-size:.75rem; line-height:1.5; color:#96a5c3; margin:11px 2px 0; min-height:1.2rem; }
+  .small-link { display:block; margin:9px auto 0; padding:4px 8px; background:transparent; border:0; color:#8c9bb9; font-size:.73rem; cursor:pointer; border-radius:6px; }
+  .small-link:hover { color:var(--text); text-decoration:underline; }
+  .right-card { display:flex; flex-direction:column; padding:clamp(20px,3.5vw,30px); }
+  .visual-title { color:var(--muted); font-size:.72rem; letter-spacing:.15em; text-transform:uppercase; font-weight:800; }
+  .beat-stage { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:25px 0 24px; min-height:335px; }
+  .orb-wrap { position:relative; width:min(64vw, 258px); max-width:100%; aspect-ratio:1; display:grid; place-items:center; margin:0 auto 24px; }
+  .orb-halo { position:absolute; inset:-11%; border-radius:50%; background:conic-gradient(from 10deg, rgba(117,242,209,.14), rgba(98,199,255,.06), rgba(157,139,255,.17), rgba(117,242,209,.14)); filter:blur(18px); opacity:.8; transition:opacity .1s, transform .12s; }
+  .orb-ring { position:absolute; inset:0; border-radius:50%; border:1px solid rgba(141,164,210,.26); background:radial-gradient(circle at 42% 28%, rgba(63,91,133,.19), rgba(8,13,25,.38) 67%); box-shadow:inset 0 0 40px rgba(84,135,182,.06), 0 0 50px rgba(98,199,255,.035); }
+  .orb-ring::before, .orb-ring::after { content:""; position:absolute; border-radius:50%; border:1px solid rgba(129,165,207,.13); }
+  .orb-ring::before { inset:10%; }
+  .orb-ring::after { inset:20%; border-color:rgba(117,242,209,.12); }
+  .orb-center { position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; gap:5px; }
+  .orb-beat { font-size:clamp(4.5rem, 10vw, 6.5rem); font-weight:900; line-height:.98; letter-spacing:-.08em; font-variant-numeric:tabular-nums; color:#eafcf9; text-shadow:0 0 28px rgba(117,242,209,.1); }
+  .orb-sub { font-size:.68rem; font-weight:800; color:#8395b6; letter-spacing:.2em; text-transform:uppercase; }
+  .orb-wrap.pulse .orb-halo { opacity:1; transform:scale(1.08); }
+  .orb-wrap.pulse .orb-ring { border-color:rgba(117,242,209,.72); box-shadow:inset 0 0 55px rgba(117,242,209,.08), 0 0 34px rgba(117,242,209,.2); }
+  .orb-wrap.pulse .orb-beat { color:var(--mint); text-shadow:0 0 24px rgba(117,242,209,.38); }
+  .orb-wrap.downbeat .orb-ring { border-color:rgba(98,199,255,.86); box-shadow:inset 0 0 65px rgba(98,199,255,.1), 0 0 43px rgba(98,199,255,.22); }
+  .orb-wrap.downbeat .orb-beat { color:#a9e8ff; text-shadow:0 0 28px rgba(98,199,255,.45); }
+  .bar-meta { display:flex; align-items:center; justify-content:center; gap:9px; color:#99a8c5; font-size:.78rem; }
+  .bar-meta strong { color:#f0f3ff; font-variant-numeric:tabular-nums; }
+  .beat-dots { width:100%; display:flex; flex-wrap:wrap; justify-content:center; gap:8px; min-height:18px; padding:2px 0; }
+  .beat-dot { width:11px; height:11px; border-radius:50%; background:#29344c; border:1px solid #394765; transition:transform .09s, background .09s, box-shadow .09s; }
+  .beat-dot.first { border-color:rgba(98,199,255,.3); }
+  .beat-dot.active { background:var(--mint); border-color:var(--mint); transform:scale(1.24); box-shadow:0 0 15px rgba(117,242,209,.45); }
+  .beat-dot.first.active { background:var(--cyan); border-color:var(--cyan); box-shadow:0 0 18px rgba(98,199,255,.58); }
+  .visual-divider { height:1px; background:linear-gradient(90deg, transparent, var(--line), transparent); margin:18px 0; }
+  .transport { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .transport button { min-height:53px; border-radius:13px; padding:13px 15px; cursor:pointer; font-weight:850; display:flex; align-items:center; justify-content:center; gap:9px; transition:transform .1s, filter .15s, background .15s; }
+  .transport button:active { transform:scale(.985); }
+  .transport svg { width:18px; height:18px; }
+  .start-button { border:1px solid rgba(117,242,209,.55); color:#071a1a; background:linear-gradient(110deg, #79f3d3, #8ee5f5); box-shadow:0 8px 24px rgba(73,221,197,.1); }
+  .start-button:hover { filter:brightness(1.06); }
+  .stop-button { background:linear-gradient(110deg, #ff9ab6, #ffc1a4); border-color:rgba(255,154,182,.55); }
+  .reset-button { border:1px solid var(--line); color:#d3dcf2; background:rgba(255,255,255,.035); }
+  .reset-button:hover { background:rgba(255,255,255,.07); }
+  .status { text-align:center; margin:13px 0 0; min-height:1.3rem; color:#8594b2; font-size:.77rem; line-height:1.5; }
+  .status.error { color:var(--danger); }
+  .footer { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin:18px 4px 0; color:#64718f; font-size:.73rem; line-height:1.6; }
+  .footer strong { color:#8998b7; font-weight:750; }
+  .kbd { border:1px solid rgba(143,162,203,.2); background:rgba(255,255,255,.035); padding:2px 6px; border-radius:5px; color:#97a6c6; font-size:.68rem; white-space:nowrap; }
+  .shake { animation:shake .24s linear; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+  @media (min-width: 1100px) { body { padding-top:38px; } }
+  @media (max-width: 780px) {
+    body { padding:21px 14px; }
+    .workspace { grid-template-columns:1fr; }
+    .right-card { min-height:480px; }
+    .beat-stage { min-height:300px; }
+    .orb-wrap { width:min(54vw, 235px); }
+    .footer { flex-direction:column; gap:5px; }
+  }
+  @media (max-width: 430px) {
+    .topbar { margin-bottom:23px; }
+    .brand-mark { width:41px; height:41px; border-radius:13px; }
+    .brand-name { font-size:.95rem; }
+    .brand-sub { font-size:.6rem; }
+    .live-chip { padding:8px 9px; font-size:.68rem; }
+    .main-card, .right-card { padding:19px; border-radius:21px; }
+    .meter-row { gap:9px; }
+    .meter-row .field-input { padding:12px 10px; }
+    .tap-card { padding:12px; }
+    .tempo-number { font-size:5.2rem; }
+    .orb-wrap { width:min(68vw, 225px); }
+    .right-card { min-height:0; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M4 17h4l3-9 5 17 4-12 2 4h6" stroke="#8DF5DB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="14" stroke="rgba(141,245,219,.38)"/></svg>
+      </div>
+      <div><div class="brand-name">PULSE</div><div class="brand-sub">Tap tempo · Metronome</div></div>
+    </div>
+    <div id="liveChip" class="live-chip"><span class="live-dot"></span><span id="liveLabel">READY TO PLAY</span></div>
+  </header>
+
+  <h1 class="headline">Find your <span>tempo.</span></h1>
+  <p class="subtitle">Tap along to discover the BPM, or type an exact tempo. The denominator sets the pulse note: at 120 BPM, 7/8 ticks twice as fast as 7/4.</p>
+
+  <section class="workspace" aria-label="Metronome workspace">
+    <section class="card main-card" aria-label="Tempo and meter settings">
+      <div class="section-kicker">
+        <span class="icon-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 18V6m5 12V9m5 9V4m5 14v-7" stroke-linecap="round"/></svg>Tempo settings</span>
+        <span class="setting-badge">01 / SETUP</span>
+      </div>
+
+      <div class="tempo-block">
+        <p class="tempo-readout"><span class="tempo-number" id="tempoDisplay">120.00</span><span class="tempo-unit">BPM</span></p>
+        <div class="tempo-caption">PULSES PER MINUTE · PULSE NOTE FOLLOWS THE DENOMINATOR</div>
+        <div class="tempo-input-wrap" style="margin-top:18px">
+          <label class="field-label" for="bpm" style="text-align:center">Type your BPM <span>· up to 2 decimals</span></label>
+          <input class="field-input" id="bpm" type="number" inputmode="decimal" min="1" max="400" step="0.01" value="120.00" aria-describedby="bpmHint">
+          <div class="field-help" id="bpmHint">Range: 1.00–400.00 BPM</div>
+        </div>
+      </div>
+
+      <div class="meter-row">
+        <div>
+          <label class="field-label" for="meter">Time signature <span>· meter</span></label>
+          <input class="field-input" id="meter" type="text" inputmode="text" value="4/4" spellcheck="false" autocomplete="off" aria-describedby="meterHint">
+          <div class="field-help" id="meterHint">Examples: 4/4, 7/4, 7/8</div>
+        </div>
+        <div>
+          <label class="field-label" for="beatUnit">Beat unit <span>· note value</span></label>
+          <div id="beatUnit" class="field-input" aria-live="polite" style="display:flex;align-items:center;justify-content:flex-start;gap:10px;min-height:49px"><span style="font-size:1.3rem;color:var(--mint)">♩</span><span id="beatUnitText" style="font-size:.87rem;color:#b4c2dc">Quarter note</span></div>
+          <div class="field-help">Sets the duration of each tick</div>
+        </div>
+      </div>
+
+      <section class="tap-card" aria-label="Tap tempo tool">
+        <div class="tap-top">
+          <div class="tap-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.5"/></svg>Tap to find BPM</div>
+          <span id="tapCount" class="tap-count">0 taps</span>
+        </div>
+        <button id="tapTempo" class="tap-button" type="button" aria-describedby="tapHint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>TAP TEMPO</span>
+          <span aria-hidden="true" style="font-size:.76rem;opacity:.72;font-weight:800">↗</span>
+        </button>
+        <p class="tap-hint" id="tapHint" aria-live="polite">Tap the button in time with the beat. The more you tap, the steadier the estimate.</p>
+        <button id="clearTaps" class="small-link" type="button">Clear tap sequence</button>
+      </section>
+    </section>
+
+    <section class="card right-card" aria-label="Metronome playback">
+      <div class="section-kicker">
+        <span class="icon-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2" stroke-linecap="round" stroke-linejoin="round"/></svg>Live beat</span>
+        <span class="setting-badge" id="meterBadge">4 / 4</span>
+      </div>
+
+      <div class="beat-stage">
+        <div class="visual-title">Beat in bar</div>
+        <div class="orb-wrap" id="orbWrap" aria-live="polite">
+          <div class="orb-halo"></div><div class="orb-ring"></div>
+          <div class="orb-center"><div id="beatNumber" class="orb-beat">—</div><div class="orb-sub">CURRENT BEAT</div></div>
+        </div>
+        <div class="bar-meta"><span>BAR</span><strong id="barNumber">—</strong><span style="opacity:.45">/</span><strong id="barMeter">4 beats</strong></div>
+        <div class="beat-dots" id="dots" style="margin-top:22px" aria-label="Beat indicators"></div>
+      </div>
+
+      <div class="visual-divider"></div>
+      <div class="transport">
+        <button id="startStop" class="start-button" type="button">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/></svg><span id="startLabel">Start</span>
+        </button>
+        <button id="reset" class="reset-button" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>Reset
+        </button>
+      </div>
+      <p id="status" class="status" role="status">Ready · 120.00 BPM · 4/4</p>
+    </section>
+  </section>
+
+  <footer class="footer">
+    <div><strong>QUICK TIP</strong> · Tap 4–5 times for a steadier estimate. The first beat of each bar is accented.</div>
+    <div><strong>NOTE VALUE MATTERS</strong> · At the same BPM, an eighth-note pulse (7/8) is twice as fast as a quarter-note pulse (7/4).</div>
+    <div><span class="kbd">Space</span> Start / stop <span class="kbd">T</span> Tap tempo</div>
+  </footer>
+</main>
+<script>
+(() => {
+  const bpmInput = document.getElementById('bpm');
+  const meterInput = document.getElementById('meter');
+  const startStop = document.getElementById('startStop');
+  const startLabel = document.getElementById('startLabel');
+  const playIcon = document.getElementById('playIcon');
+  const resetButton = document.getElementById('reset');
+  const beatNumber = document.getElementById('beatNumber');
+  const barNumber = document.getElementById('barNumber');
+  const barMeter = document.getElementById('barMeter');
+  const dots = document.getElementById('dots');
+  const status = document.getElementById('status');
+  const meterHint = document.getElementById('meterHint');
+  const bpmHint = document.getElementById('bpmHint');
+  const tempoDisplay = document.getElementById('tempoDisplay');
+  const beatUnitText = document.getElementById('beatUnitText');
+  const meterBadge = document.getElementById('meterBadge');
+  const tapTempoButton = document.getElementById('tapTempo');
+  const tapHint = document.getElementById('tapHint');
+  const tapCount = document.getElementById('tapCount');
+  const clearTapsButton = document.getElementById('clearTaps');
+  const orbWrap = document.getElementById('orbWrap');
+  const liveChip = document.getElementById('liveChip');
+  const liveLabel = document.getElementById('liveLabel');
+
+  let audio = null;
+  let running = false;
+  let scheduler = null;
+  let beat = 0;
+  let bar = 1;
+  let nextTime = 0;
+  let visualTimeouts = [];
+  let scheduleToken = 0;
+  let orbTimeout = null;
+  let tapTimes = [];
+  let tapResetTimer = null;
+  let previousInputBpm = 120;
+
+  function formatBpm(value) { return Number(value).toFixed(2); }
+  // BPM is counted using the note value named by the time-signature denominator.
+  // Quarter note (4) = 60/BPM seconds; eighth note (8) = half that duration.
+  function beatDurationSeconds(bpm, meter) { return (60 / bpm) * (4 / meter.denominator); }
+  function setStatus(message, error = false) {
+    status.textContent = message;
+    status.classList.toggle('error', error);
+  }
+  function showTempo(value) { tempoDisplay.textContent = formatBpm(value); }
+  function readBpm(showErrors = true) {
+    const raw = bpmInput.value.trim();
+    const value = Number(raw);
+    const validFormat = /^\d+(?:\.\d{1,2})?$/.test(raw);
+    if (raw === '' || !validFormat || !Number.isFinite(value) || value < 1 || value > 400) {
+      if (showErrors) {
+        bpmHint.textContent = 'Enter 1.00–400.00 with up to 2 decimal places (e.g. 123.45).';
+        bpmHint.classList.add('error');
+        bpmInput.classList.add('invalid');
+      }
+      return null;
+    }
+    bpmHint.textContent = 'Range: 1.00–400.00 BPM';
+    bpmHint.classList.remove('error');
+    bpmInput.classList.remove('invalid');
+    showTempo(value);
+    return value;
+  }
+  function readMeter(showErrors = true) {
+    const raw = meterInput.value.trim();
+    const match = raw.match(/^(\d{1,2})\s*\/\s*(1|2|4|8|16|32|64)$/);
+    if (!match) {
+      if (showErrors) {
+        meterHint.textContent = 'Format: numerator/denominator, e.g. 7/4.';
+        meterHint.classList.add('error');
+        meterInput.classList.add('invalid');
+      }
+      return null;
+    }
+    const numerator = Number(match[1]);
+    const denominator = Number(match[2]);
+    if (numerator < 1 || numerator > 32) {
+      if (showErrors) {
+        meterHint.textContent = 'Numerator must be between 1 and 32.';
+        meterHint.classList.add('error');
+        meterInput.classList.add('invalid');
+      }
+      return null;
+    }
+    meterHint.textContent = 'Examples: 4/4, 7/4, 7/8';
+    meterHint.classList.remove('error');
+    meterInput.classList.remove('invalid');
+    const unitNames = {1:'Whole note', 2:'Half note', 4:'Quarter note', 8:'Eighth note', 16:'16th note', 32:'32nd note', 64:'64th note'};
+    return { numerator, denominator, label: numerator + '/' + denominator, unit: unitNames[denominator] };
+  }
+  function makeDots(count) {
+    dots.replaceChildren();
+    for (let i = 0; i < count; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'beat-dot' + (i === 0 ? ' first' : '');
+      dot.setAttribute('aria-hidden', 'true');
+      dots.appendChild(dot);
+    }
+  }
+  function updateMeterUi(meter) {
+    meterBadge.textContent = meter.numerator + ' / ' + meter.denominator;
+    barMeter.textContent = meter.numerator + (meter.numerator === 1 ? ' beat' : ' beats');
+    beatUnitText.textContent = meter.unit;
+    makeDots(meter.numerator);
+    barNumber.textContent = running ? String(bar) : '—';
+    document.querySelector('#beatUnit > span').textContent = meter.denominator === 1 ? '𝅝' : meter.denominator === 2 ? '𝅗𝅥' : meter.denominator === 4 ? '♩' : meter.denominator === 8 ? '♪' : '♫';
+  }
+  function resetCounter() {
+    beat = 0; bar = 1;
+    beatNumber.textContent = '—';
+    barNumber.textContent = '—';
+    const meter = readMeter(false);
+    updateMeterUi(meter || { numerator:4, denominator:4, label:'4/4', unit:'Quarter note' });
+    [...dots.children].forEach(dot => dot.classList.remove('active'));
+    orbWrap.classList.remove('pulse', 'downbeat');
+  }
+  function clickSound(at, accented) {
+    if (!audio) return;
+    const osc = audio.createOscillator();
+    const gain = audio.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(accented ? 1320 : 880, at);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(accented ? 0.72 : 0.40, at + 0.002);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.048);
+    osc.connect(gain); gain.connect(audio.destination);
+    osc.start(at); osc.stop(at + 0.052);
+  }
+  function clearVisualTimeouts() {
+    visualTimeouts.forEach(id => clearTimeout(id));
+    visualTimeouts = [];
+    clearTimeout(orbTimeout);
+    orbWrap.classList.remove('pulse', 'downbeat');
+  }
+  function animateBeat(thisBeat) {
+    orbWrap.classList.remove('pulse', 'downbeat');
+    // Force reflow so the pulse animation can retrigger on consecutive beats.
+    void orbWrap.offsetWidth;
+    orbWrap.classList.add(thisBeat === 1 ? 'downbeat' : 'pulse');
+    clearTimeout(orbTimeout);
+    orbTimeout = setTimeout(() => orbWrap.classList.remove('pulse', 'downbeat'), 140);
+  }
+  function scheduleBeat(token) {
+    if (!running || token !== scheduleToken) return;
+    const bpm = readBpm(false);
+    const meter = readMeter(false);
+    if (!bpm || !meter) {
+      stop(false); setStatus('Fix the highlighted setting, then press Start.', true); return;
+    }
+    if (audio.currentTime < nextTime - 0.03) {
+      scheduler = setTimeout(() => scheduleBeat(token), 15); return;
+    }
+    while (nextTime < audio.currentTime + 0.12) {
+      beat += 1;
+      if (beat > meter.numerator) { beat = 1; bar += 1; }
+      const thisBeat = beat;
+      const thisBar = bar;
+      const at = nextTime;
+      clickSound(at, thisBeat === 1);
+      const delay = Math.max(0, (at - audio.currentTime) * 1000);
+      let visualTimer;
+      visualTimer = setTimeout(() => {
+        visualTimeouts = visualTimeouts.filter(id => id !== visualTimer);
+        if (!running || token !== scheduleToken) return;
+        beatNumber.textContent = String(thisBeat);
+        barNumber.textContent = String(thisBar);
+        barMeter.textContent = meter.numerator + (meter.numerator === 1 ? ' beat' : ' beats');
+        [...dots.children].forEach((dot, i) => dot.classList.toggle('active', i === thisBeat - 1));
+        animateBeat(thisBeat);
+        liveChip.classList.add('playing'); liveLabel.textContent = 'PLAYING';
+        setStatus('Playing · ' + formatBpm(bpm) + ' BPM · ' + meter.label + ' · ' + meter.unit.toLowerCase() + ' pulse · Bar ' + thisBar);
+      }, delay);
+      visualTimeouts.push(visualTimer);
+      nextTime += beatDurationSeconds(bpm, meter);
+    }
+    scheduler = setTimeout(() => scheduleBeat(token), 18);
+  }
+  async function start() {
+    const bpm = readBpm();
+    const meter = readMeter();
+    if (!bpm || !meter) { setStatus('Fix the highlighted setting, then press Start.', true); return; }
+    try {
+      if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+      if (audio.state === 'suspended') await audio.resume();
+    } catch (e) {
+      setStatus('Audio could not start. Try Chrome or Edge.', true); return;
+    }
+    stop(false);
+    running = true;
+    startLabel.textContent = 'Stop';
+    startStop.classList.remove('start-button'); startStop.classList.add('stop-button');
+    playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>';
+    liveChip.classList.add('playing'); liveLabel.textContent = 'PLAYING';
+    beat = 0; bar = 0;
+    updateMeterUi(meter);
+    beatNumber.textContent = '—';
+    nextTime = audio.currentTime + 0.06;
+    const token = ++scheduleToken;
+    setStatus('Starting · ' + formatBpm(bpm) + ' BPM · ' + meter.label + ' · ' + meter.unit.toLowerCase() + ' pulse');
+    scheduleBeat(token);
+  }
+  function stop(updateStatus = true) {
+    running = false;
+    scheduleToken++;
+    clearTimeout(scheduler);
+    clearVisualTimeouts();
+    startLabel.textContent = 'Start';
+    startStop.classList.remove('stop-button'); startStop.classList.add('start-button');
+    playIcon.innerHTML = '<path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/>';
+    liveChip.classList.remove('playing'); liveLabel.textContent = 'READY TO PLAY';
+    if (updateStatus) {
+      const bpm = readBpm(false);
+      setStatus('Stopped · ' + (bpm !== null ? formatBpm(bpm) : (bpmInput.value || '—')) + ' BPM · ' + (meterInput.value.trim() || '—'));
+    }
+  }
+  function clearTapSequence(message = 'Tap the button in time with the beat. The more you tap, the steadier the estimate.') {
+    tapTimes = [];
+    clearTimeout(tapResetTimer);
+    tapCount.textContent = '0 taps';
+    tapHint.textContent = message;
+    tapTempoButton.classList.remove('tapped');
+  }
+  function onTapTempo() {
+    const now = performance.now();
+    if (tapTimes.length && now - tapTimes[tapTimes.length - 1] > 4000) tapTimes = [];
+    tapTimes.push(now);
+    if (tapTimes.length > 7) tapTimes.shift();
+    tapCount.textContent = tapTimes.length + (tapTimes.length === 1 ? ' tap' : ' taps');
+    tapTempoButton.classList.add('tapped');
+    setTimeout(() => tapTempoButton.classList.remove('tapped'), 110);
+    if (tapTimes.length < 2) {
+      tapHint.textContent = 'Good — tap again in time. Your BPM appears after the next tap.';
+    } else {
+      const intervals = [];
+      for (let i = 1; i < tapTimes.length; i++) intervals.push(tapTimes[i] - tapTimes[i - 1]);
+      const recent = intervals.slice(-5);
+      const averageMs = recent.reduce((sum, interval) => sum + interval, 0) / recent.length;
+      const estimate = 60000 / averageMs;
+      if (estimate < 1 || estimate > 400 || !Number.isFinite(estimate)) {
+        tapHint.textContent = 'That tap speed is outside 1.00–400.00 BPM. Try tapping a little slower.';
+      } else {
+        const rounded = Math.round(estimate * 100) / 100;
+        bpmInput.value = rounded.toFixed(2);
+        previousInputBpm = rounded;
+        readBpm(false);
+        const confidence = tapTimes.length >= 5 ? 'Averaging recent taps for a steadier estimate.' : 'Keep tapping for a more stable average.';
+        tapHint.textContent = 'Estimated ' + formatBpm(rounded) + ' BPM · ' + confidence;
+        if (running) setStatus('Tempo updated · ' + formatBpm(rounded) + ' BPM · ' + (meterInput.value.trim() || '—'));
+        else setStatus('Tap estimate · ' + formatBpm(rounded) + ' BPM · Ready to play');
+      }
+    }
+    clearTimeout(tapResetTimer);
+    tapResetTimer = setTimeout(() => {
+      if (tapTimes.length) clearTapSequence('Tap the button in time with the beat. The more you tap, the steadier the estimate.');
+    }, 4000);
+  }
+
+  startStop.addEventListener('click', () => running ? stop() : start());
+  resetButton.addEventListener('click', () => {
+    stop(false);
+    bpmInput.value = '120.00'; meterInput.value = '4/4';
+    previousInputBpm = 120;
+    resetCounter(); clearTapSequence();
+    bpmHint.textContent = 'Range: 1.00–400.00 BPM'; bpmHint.classList.remove('error'); bpmInput.classList.remove('invalid');
+    meterHint.textContent = 'Examples: 4/4, 7/4, 7/8'; meterHint.classList.remove('error'); meterInput.classList.remove('invalid');
+    showTempo(120); setStatus('Ready · 120.00 BPM · 4/4');
+  });
+  tapTempoButton.addEventListener('click', onTapTempo);
+  clearTapsButton.addEventListener('click', () => clearTapSequence('Tap sequence cleared. Tap again to measure a new tempo.'));
+  bpmInput.addEventListener('input', () => {
+    const bpm = readBpm(false);
+    if (bpm !== null) {
+      previousInputBpm = bpm;
+      bpmHint.textContent = 'Range: 1.00–400.00 BPM'; bpmHint.classList.remove('error'); bpmInput.classList.remove('invalid');
+      showTempo(bpm);
+      if (running) setStatus('Tempo updated · ' + formatBpm(bpm) + ' BPM · ' + meterInput.value.trim());
+    } else {
+      bpmHint.textContent = 'Enter 1.00–400.00 with up to 2 decimal places.';
+      bpmHint.classList.add('error'); bpmInput.classList.add('invalid');
+    }
+  });
+  bpmInput.addEventListener('change', () => {
+    const bpm = readBpm();
+    if (running && bpm !== null) setStatus('Tempo updated · ' + formatBpm(bpm) + ' BPM · ' + meterInput.value.trim());
+  });
+  meterInput.addEventListener('input', () => {
+    const meter = readMeter(false);
+    if (meter) {
+      meterInput.classList.remove('invalid'); meterHint.classList.remove('error');
+      updateMeterUi(meter);
+    } else {
+      meterInput.classList.add('invalid'); meterHint.classList.add('error');
+      meterHint.textContent = 'Use a valid signature, e.g. 7/4. Numerator: 1–32.';
+    }
+  });
+  meterInput.addEventListener('change', () => {
+    const meter = readMeter();
+    if (meter) {
+      updateMeterUi(meter);
+      if (running) { stop(false); start(); }
+      else setStatus('Ready · ' + formatBpm(Number(bpmInput.value) || 120) + ' BPM · ' + meter.label);
+    } else if (running) stop(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+    const tag = event.target && event.target.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target.isContentEditable) return;
+    if (event.code === 'Space') { event.preventDefault(); running ? stop() : start(); }
+    if (event.key.toLowerCase() === 't') onTapTempo();
+  });
+
+  resetCounter();
+  showTempo(120);
+})();
+</script>
+</body>
+</html>
