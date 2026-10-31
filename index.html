@@ -6,7 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080b14">
-<title>PULSE — Tap Tempo Metronome</title>
+<title>PULSE — Saira Edition v14 · Tap Tempo Metronome</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -152,6 +152,36 @@
   .stop-button { background:linear-gradient(110deg, #ff9ab6, #ffc1a4); border-color:rgba(255,154,182,.55); }
   .reset-button { border:1px solid var(--line); color:#d3dcf2; background:rgba(255,255,255,.035); }
   .reset-button:hover { background:rgba(255,255,255,.07); }
+  .export-card {
+    margin-top:16px; padding:15px; border:1px solid rgba(98,199,255,.2); border-radius:17px;
+    background:linear-gradient(135deg, rgba(39,67,100,.18), rgba(49,40,91,.16));
+  }
+  .export-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:12px; }
+  .export-title { display:flex; align-items:center; gap:8px; color:#e7efff; font-size:.88rem; font-weight:850; }
+  .export-title svg { width:18px; height:18px; color:var(--cyan); }
+  .export-format { color:#8595b5; font-size:.65rem; font-weight:800; letter-spacing:.13em; }
+  .export-controls { display:grid; grid-template-columns:minmax(76px,.72fr) minmax(118px,1fr) minmax(0,1.2fr); align-items:end; gap:10px; }
+  .export-bars-label { display:block; margin-bottom:7px; color:#a9b5d0; font-size:.72rem; font-weight:750; }
+  .export-bars-input, .export-format-select {
+    appearance:none; width:100%; min-width:0; min-height:48px; padding:10px 11px; border:1px solid rgba(142,165,213,.23);
+    border-radius:12px; outline:none; color:var(--text); background:rgba(5,9,19,.66); font-size:.92rem; font-weight:800;
+    font-variant-numeric:tabular-nums;
+  }
+  .export-bars-input:focus, .export-format-select:focus { border-color:rgba(98,199,255,.75); box-shadow:0 0 0 4px rgba(98,199,255,.1); }
+  .export-format-select { cursor:pointer; padding-right:25px; }
+  .export-format-select option { color:#f2f5ff; background:#11182a; }
+  .download-button {
+    min-height:48px; padding:11px 13px; display:flex; align-items:center; justify-content:center; gap:9px;
+    border:1px solid rgba(98,199,255,.48); border-radius:12px; color:#071724;
+    background:linear-gradient(105deg, #8bdcff, #a5c5ff 55%, #b5a5ff); font-size:.83rem; font-weight:900;
+    cursor:pointer; transition:filter .15s, transform .1s, opacity .15s;
+  }
+  .download-button svg { width:17px; height:17px; flex:none; }
+  .download-button:hover:not(:disabled) { filter:brightness(1.08); }
+  .download-button:active:not(:disabled) { transform:scale(.985); }
+  .download-button:disabled { opacity:.38; cursor:not-allowed; filter:saturate(.5); }
+  .export-hint { min-height:1.25rem; margin:10px 2px 0; color:#8f9fbd; font-size:.69rem; line-height:1.5; }
+  .export-hint.error { color:var(--danger); }
   .status { text-align:center; margin:13px 0 0; min-height:1.3rem; color:#8594b2; font-size:.77rem; line-height:1.5; }
   .status.error { color:var(--danger); }
   .footer { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin:18px 4px 0; color:#64718f; font-size:.73rem; line-height:1.6; }
@@ -177,6 +207,8 @@
     .main-card, .right-card { padding:19px; border-radius:21px; }
     .meter-row { gap:9px; }
     .meter-row .field-input { padding:12px 10px; }
+    .export-controls { grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr); }
+    .download-button { grid-column:1 / -1; }
     .tap-card { padding:12px; }
     .tempo-number { font-size:5.2rem; }
     .orb-wrap { width:min(68vw, 225px); }
@@ -270,6 +302,38 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"/><path d="M3 3v5h5"/></svg>Reset
         </button>
       </div>
+      <section class="export-card" aria-label="Download metronome beat">
+        <div class="export-head">
+          <div class="export-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3h14v-3"/></svg>
+            Download beat
+          </div>
+          <span class="export-format">AUDIO FILE</span>
+        </div>
+        <div class="export-controls">
+          <div>
+            <label class="export-bars-label" for="exportBars">Length · bars</label>
+            <input class="export-bars-input" id="exportBars" type="number" min="1" max="32" step="1" value="4" inputmode="numeric">
+          </div>
+          <div>
+            <label class="export-bars-label" for="exportFormat">File type</label>
+            <select class="export-format-select" id="exportFormat" aria-label="Audio file type">
+              <option value="wav">WAV (.wav)</option>
+              <option value="aiff">AIFF (.aiff)</option>
+              <option value="flac">FLAC (.flac)</option>
+              <option value="alac">ALAC (.m4a)</option>
+              <option value="mp3">MP3 (.mp3)</option>
+              <option value="aac">AAC (.aac)</option>
+              <option value="ogg">OGG Vorbis (.ogg)</option>
+            </select>
+          </div>
+          <button id="downloadBeat" class="download-button" type="button" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v3h14v-3"/></svg>
+            <span id="downloadBeatLabel">Download beat</span>
+          </button>
+        </div>
+        <p id="exportHint" class="export-hint" aria-live="polite">Ready with 120.00 BPM and 4/4. Choose a length and file type, then download.</p>
+      </section>
       <p id="status" class="status" role="status">Ready · 120.00 BPM · 4/4</p>
     </section>
   </section>
@@ -305,7 +369,16 @@
   const orbWrap = document.getElementById('orbWrap');
   const liveChip = document.getElementById('liveChip');
   const liveLabel = document.getElementById('liveLabel');
+  const exportBarsInput = document.getElementById('exportBars');
+  const exportFormatSelect = document.getElementById('exportFormat');
+  const downloadBeatButton = document.getElementById('downloadBeat');
+  const downloadBeatLabel = document.getElementById('downloadBeatLabel');
+  const exportHint = document.getElementById('exportHint');
 
+  // Load only the selected format-specific codec module.
+  const advancedEncoderPromises = new Map();
+  const advancedEncoderReady = new Set();
+  let isExportBusy = false;
   let audio = null;
   let running = false;
   let scheduler = null;
@@ -317,7 +390,11 @@
   let orbTimeout = null;
   let tapTimes = [];
   let tapResetTimer = null;
-  let previousInputBpm = 120;
+  const MAX_EXPORT_SECONDS = 180;
+  // Exported files retain their existing lead-in; live playback starts after 60 ms.
+  const EXPORT_LEAD_SECONDS = 0.50;
+  const LIVE_START_LEAD_SECONDS = 0.06;
+  const EXPORT_TAIL_SECONDS = 0.18;
 
   function formatBpm(value) { return Number(value).toFixed(2); }
   // BPM is counted using the note value named by the time-signature denominator.
@@ -399,18 +476,398 @@
     [...dots.children].forEach(dot => dot.classList.remove('active'));
     orbWrap.classList.remove('pulse', 'downbeat');
   }
+  // Live clicks are rendered once into AudioBuffers and reused. This gives
+  // every downbeat (including the first one after Start) exactly the same PCM
+  // waveform; no special first-hit gain or attack branch is applied.
+  let liveClickBuffers = null;
+  let liveClickBufferRate = 0;
+
+  function buildLiveClickBuffer(accented) {
+    const sampleRate = audio.sampleRate;
+    const tones = accented
+      ? [{ f: 660, g: 0.70, d: 0.14 }, { f: 1320, g: 0.22, d: 0.045 }, { f: 165, g: 0.25, d: 0.085 }]
+      : [{ f: 1050, g: 0.36, d: 0.068 }, { f: 2100, g: 0.11, d: 0.020 }];
+    const duration = accented ? 0.16 : 0.09;
+    const length = Math.ceil(sampleRate * duration);
+    const buffer = audio.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    const attack = 0.0015;
+
+    for (let i = 0; i < length; i++) {
+      const t = i / sampleRate;
+      let mixed = 0;
+      for (const tone of tones) {
+        if (t >= tone.d) continue;
+        let envelope;
+        if (t <= attack) {
+          envelope = 0.0001 * Math.pow(tone.g / 0.0001, t / attack);
+        } else {
+          const decayProgress = (t - attack) / (tone.d - attack);
+          envelope = tone.g * Math.pow(0.0001 / tone.g, decayProgress);
+        }
+        mixed += Math.sin(2 * Math.PI * tone.f * t) * envelope;
+      }
+      // Match the existing live master level of 0.72.
+      data[i] = mixed * 0.72;
+    }
+    return buffer;
+  }
+
+  function ensureLiveClickBuffers() {
+    if (!audio) return;
+    if (liveClickBuffers && liveClickBufferRate === audio.sampleRate) return;
+    liveClickBuffers = {
+      accented: buildLiveClickBuffer(true),
+      regular: buildLiveClickBuffer(false)
+    };
+    liveClickBufferRate = audio.sampleRate;
+  }
+
   function clickSound(at, accented) {
     if (!audio) return;
-    const osc = audio.createOscillator();
-    const gain = audio.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(accented ? 1320 : 880, at);
-    gain.gain.setValueAtTime(0.0001, at);
-    gain.gain.exponentialRampToValueAtTime(accented ? 0.72 : 0.40, at + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.048);
-    osc.connect(gain); gain.connect(audio.destination);
-    osc.start(at); osc.stop(at + 0.052);
+    ensureLiveClickBuffers();
+    const source = audio.createBufferSource();
+    source.buffer = accented ? liveClickBuffers.accented : liveClickBuffers.regular;
+    source.connect(audio.destination);
+    source.start(at);
   }
+
+  function exportDurationSeconds(bpm, meter, bars) {
+    return EXPORT_LEAD_SECONDS + bars * meter.numerator * beatDurationSeconds(bpm, meter) + EXPORT_TAIL_SECONDS;
+  }
+
+  const advancedExportInfo = {
+    flac: { label: 'FLAC', extension: 'flac', mime: 'audio/flac', module: 'https://esm.sh/@audio/encode-flac@1.4.2' },
+    alac: { label: 'ALAC', extension: 'm4a', mime: 'audio/mp4', module: 'https://esm.sh/@audio/encode-alac@1.0.2' },
+    mp3:  { label: 'MP3', extension: 'mp3', mime: 'audio/mpeg', module: 'https://esm.sh/@audio/encode-mp3@2.0.0' },
+    aac:  { label: 'AAC', extension: 'aac', mime: 'audio/aac', module: 'https://esm.sh/@audio/encode-aac@1.2.1' },
+    ogg:  { label: 'OGG Vorbis', extension: 'ogg', mime: 'audio/ogg', module: 'https://esm.sh/@audio/encode-ogg@1.3.1' }
+  };
+  const formatLabels = { wav: 'WAV', aiff: 'AIFF', flac: 'FLAC', alac: 'ALAC', mp3: 'MP3', aac: 'AAC', ogg: 'OGG Vorbis' };
+
+  function updateExportAvailability() {
+    if (isExportBusy) {
+      downloadBeatButton.disabled = true;
+      return;
+    }
+    const bpm = readBpm(false);
+    const meter = readMeter(false);
+    const barsRaw = exportBarsInput.value.trim();
+    const bars = Number(barsRaw);
+    const barsValid = /^\d+$/.test(barsRaw) && Number.isInteger(bars) && bars >= 1 && bars <= 32;
+
+    // The preset 120.00 BPM and 4/4 meter are valid values from the start.
+    if (bpm === null || !meter) {
+      downloadBeatButton.disabled = true;
+      exportHint.classList.remove('error');
+      exportHint.textContent = 'Enter a valid BPM and time signature to create the beat.';
+      return;
+    }
+    if (!barsValid) {
+      downloadBeatButton.disabled = true;
+      exportHint.classList.add('error');
+      exportHint.textContent = 'Choose a whole number of bars from 1 to 32.';
+      return;
+    }
+
+    const duration = exportDurationSeconds(bpm, meter, bars);
+    if (duration > MAX_EXPORT_SECONDS) {
+      downloadBeatButton.disabled = true;
+      exportHint.classList.add('error');
+      exportHint.textContent = 'This export would be longer than 3 minutes. Reduce the number of bars or adjust the tempo.';
+      return;
+    }
+
+    downloadBeatButton.disabled = false;
+    exportHint.classList.remove('error');
+    const format = exportFormatSelect.value;
+    const formatLabel = formatLabels[format] || format.toUpperCase();
+    let detail;
+    if (format === 'wav' || format === 'aiff') {
+      detail = '16-bit PCM · 44.1 kHz · instant native export';
+    } else if (advancedEncoderReady.has(format)) {
+      detail = 'small codec loaded · ready to export';
+    } else {
+      detail = 'small codec loads only for this format';
+    }
+    exportHint.textContent = formatLabel + ' · ' + bars + (bars === 1 ? ' bar' : ' bars') + ' · ' + duration.toFixed(1) + ' seconds · ' + detail;
+  }
+
+  function addTone(samples, sampleRate, startSample, frequency, peak, duration, phase = 0) {
+    const toneSamples = Math.ceil(duration * sampleRate);
+    const attack = 0.0015;
+    const omega = Math.PI * 2 * frequency;
+    for (let i = 0; i < toneSamples && startSample + i < samples.length; i++) {
+      const t = i / sampleRate;
+      const fadeIn = Math.min(1, t / attack);
+      const envelope = peak * fadeIn * Math.exp(-7.2 * t / duration);
+      samples[startSample + i] += Math.sin(omega * t + phase) * envelope;
+    }
+  }
+
+  function buildBeatSamples(bpm, meter, bars) {
+    const sampleRate = 44100;
+    const beatInterval = beatDurationSeconds(bpm, meter);
+    const duration = exportDurationSeconds(bpm, meter, bars);
+    const sampleCount = Math.ceil(duration * sampleRate);
+    const samples = new Float32Array(sampleCount);
+    const leadSamples = Math.round(EXPORT_LEAD_SECONDS * sampleRate);
+
+    for (let barIndex = 0; barIndex < bars; barIndex++) {
+      for (let beatIndex = 0; beatIndex < meter.numerator; beatIndex++) {
+        const startSample = leadSamples + Math.round((barIndex * meter.numerator + beatIndex) * beatInterval * sampleRate);
+        const accented = beatIndex === 0;
+        if (accented) {
+          // Downbeat: low body + main tone + bright click transient.
+          addTone(samples, sampleRate, startSample, 660, 0.70, 0.14);
+          addTone(samples, sampleRate, startSample, 1320, 0.22, 0.045);
+          addTone(samples, sampleRate, startSample, 165, 0.25, 0.085);
+        } else {
+          // Other beats: shorter, lighter, and higher than the downbeat.
+          addTone(samples, sampleRate, startSample, 1050, 0.36, 0.068);
+          addTone(samples, sampleRate, startSample, 2100, 0.11, 0.020);
+        }
+      }
+    }
+
+    // Keep a little headroom for players and speakers that are sensitive to peaks.
+    let peak = 0;
+    for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+    if (peak > 0.94) {
+      const scale = 0.94 / peak;
+      for (let i = 0; i < samples.length; i++) samples[i] *= scale;
+    }
+    return { samples, sampleRate, duration };
+  }
+
+  function encodeWav(samples, sampleRate) {
+    const bytesPerSample = 2;
+    const dataBytes = samples.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataBytes);
+    const view = new DataView(buffer);
+    const writeText = (offset, value) => {
+      for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
+    };
+    writeText(0, 'RIFF');
+    view.setUint32(4, 36 + dataBytes, true);
+    writeText(8, 'WAVE');
+    writeText(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * bytesPerSample, true);
+    view.setUint16(32, bytesPerSample, true);
+    view.setUint16(34, 16, true);
+    writeText(36, 'data');
+    view.setUint32(40, dataBytes, true);
+    let offset = 44;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+      const clipped = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(offset, clipped < 0 ? Math.round(clipped * 32768) : Math.round(clipped * 32767), true);
+    }
+    return new Blob([buffer], { type: 'audio/wav' });
+  }
+
+  function writeExtended80(view, offset, value) {
+    if (value === 0) {
+      for (let i = 0; i < 10; i++) view.setUint8(offset + i, 0);
+      return;
+    }
+    const exponent = Math.floor(Math.log2(value));
+    const normalized = value / Math.pow(2, exponent);
+    const exponentBits = exponent + 16383;
+    const mantissa = BigInt(Math.round(normalized * Math.pow(2, 63)));
+    view.setUint16(offset, exponentBits, false);
+    view.setUint32(offset + 2, Number((mantissa >> 32n) & 0xffffffffn), false);
+    view.setUint32(offset + 6, Number(mantissa & 0xffffffffn), false);
+  }
+
+  function encodeAiff(samples, sampleRate) {
+    const bytesPerSample = 2;
+    const dataBytes = samples.length * bytesPerSample;
+    const buffer = new ArrayBuffer(54 + dataBytes);
+    const view = new DataView(buffer);
+    const writeText = (offset, value) => {
+      for (let i = 0; i < value.length; i++) view.setUint8(offset + i, value.charCodeAt(i));
+    };
+    writeText(0, 'FORM');
+    view.setUint32(4, buffer.byteLength - 8, false);
+    writeText(8, 'AIFF');
+    writeText(12, 'COMM');
+    view.setUint32(16, 18, false);
+    view.setUint16(20, 1, false); // mono
+    view.setUint32(22, samples.length, false);
+    view.setUint16(26, 16, false);
+    writeExtended80(view, 28, sampleRate);
+    writeText(38, 'SSND');
+    view.setUint32(42, dataBytes + 8, false);
+    view.setUint32(46, 0, false); // offset
+    view.setUint32(50, 0, false); // block size
+    let offset = 54;
+    for (let i = 0; i < samples.length; i++, offset += 2) {
+      const clipped = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(offset, clipped < 0 ? Math.round(clipped * 32768) : Math.round(clipped * 32767), false);
+    }
+    return new Blob([buffer], { type: 'audio/aiff' });
+  }
+
+  async function loadAdvancedEncoder(format) {
+    const info = advancedExportInfo[format];
+    if (!info) throw new Error('Unsupported audio format.');
+    if (!advancedEncoderPromises.has(format)) {
+      const promise = import(info.module)
+        .then(module => {
+          if (typeof module.default !== 'function') {
+            throw new Error(info.label + ' encoder module did not load correctly.');
+          }
+          advancedEncoderReady.add(format);
+          return module.default;
+        })
+        .catch(error => {
+          advancedEncoderPromises.delete(format);
+          advancedEncoderReady.delete(format);
+          throw error;
+        });
+      advancedEncoderPromises.set(format, promise);
+    }
+    return advancedEncoderPromises.get(format);
+  }
+
+  // Prepare the selected format while the user continues setting up the beat.
+  function prepareAdvancedEncoder(format) {
+    if (!advancedExportInfo[format]) return Promise.resolve(null);
+    return loadAdvancedEncoder(format);
+  }
+
+  function joinEncodedParts(parts) {
+    const valid = parts.filter(part => part && part.length);
+    const total = valid.reduce((sum, part) => sum + part.length, 0);
+    const joined = new Uint8Array(total);
+    let offset = 0;
+    for (const part of valid) {
+      joined.set(part, offset);
+      offset += part.length;
+    }
+    return joined;
+  }
+
+  async function encodeWithFormat(samples, sampleRate, format) {
+    const info = advancedExportInfo[format];
+    if (!info) throw new Error('Unsupported audio format.');
+    const createEncoder = await loadAdvancedEncoder(format);
+    const common = { sampleRate, channels: 1, bitDepth: 16 };
+    let encoder;
+
+    if (format === 'flac') {
+      encoder = await createEncoder({ ...common, compression: 2 });
+    } else if (format === 'alac') {
+      encoder = await createEncoder({ ...common, fastMode: true });
+    } else if (format === 'mp3') {
+      encoder = await createEncoder({ ...common, bitrate: 192 });
+    } else if (format === 'aac') {
+      encoder = await createEncoder({ ...common, bitrate: 192, profile: 'lc' });
+    } else if (format === 'ogg') {
+      encoder = await createEncoder({ ...common, quality: 5 });
+    }
+
+    if (!encoder || typeof encoder.encode !== 'function' || typeof encoder.flush !== 'function') {
+      throw new Error(info.label + ' encoder did not initialize correctly.');
+    }
+
+    try {
+      exportHint.textContent = 'Encoding ' + info.label + ' · please keep PULSE open…';
+      // Format-specific encoders accept one Float32Array per channel.
+      const first = await encoder.encode([samples]);
+      const final = await encoder.flush();
+      const data = (format === 'alac')
+        ? final
+        : joinEncodedParts([first, final]);
+      // FLAC finalizes STREAMINFO after flushing and exposes the corrected header.
+      const head = format === 'alac' ? null : encoder.head?.();
+      if (head && data instanceof Uint8Array && data.length >= head.length) data.set(head, 0);
+      if (!(data instanceof Uint8Array) || data.length === 0) {
+        throw new Error(info.label + ' encoder returned an empty file.');
+      }
+      return new Blob([data], { type: info.mime });
+    } finally {
+      try { encoder.free?.(); } catch (_) { /* Encoder may already be freed by flush(). */ }
+    }
+  }
+
+  async function downloadBeat() {
+    if (isExportBusy) return;
+    const bpm = readBpm();
+    const meter = readMeter();
+    const bars = Number(exportBarsInput.value);
+    const format = exportFormatSelect.value;
+    if (bpm === null || !meter) {
+      updateExportAvailability();
+      setStatus('Enter a valid BPM and time signature before downloading.', true);
+      return;
+    }
+    if (!Number.isInteger(bars) || bars < 1 || bars > 32) {
+      updateExportAvailability();
+      setStatus('Choose a length from 1 to 32 bars before downloading.', true);
+      return;
+    }
+    const duration = exportDurationSeconds(bpm, meter, bars);
+    if (duration > MAX_EXPORT_SECONDS) {
+      updateExportAvailability();
+      setStatus('The export is limited to 3 minutes. Reduce the number of bars.', true);
+      return;
+    }
+
+    isExportBusy = true;
+    downloadBeatButton.disabled = true;
+    downloadBeatLabel.textContent = 'Preparing…';
+    exportHint.classList.remove('error');
+    try {
+      const rendered = buildBeatSamples(bpm, meter, bars);
+      let file;
+      let extension;
+      if (format === 'wav') {
+        file = encodeWav(rendered.samples, rendered.sampleRate);
+        extension = 'wav';
+      } else if (format === 'aiff') {
+        file = encodeAiff(rendered.samples, rendered.sampleRate);
+        extension = 'aiff';
+      } else {
+        const info = advancedExportInfo[format];
+        downloadBeatLabel.textContent = 'Loading ' + info.label + '…';
+        exportHint.textContent = 'Loading the small ' + info.label + ' encoder…';
+        await prepareAdvancedEncoder(format);
+        downloadBeatLabel.textContent = 'Encoding…';
+        file = await encodeWithFormat(rendered.samples, rendered.sampleRate, format);
+        extension = info.extension;
+      }
+
+      const formatLabel = formatLabels[format] || format.toUpperCase();
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      const bpmFile = formatBpm(bpm).replace('.', '-');
+      link.href = url;
+      link.download = 'PULSE_' + bpmFile + 'BPM_' + meter.numerator + '-' + meter.denominator + '_' + bars + 'bars.' + extension;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      setStatus('Downloaded · ' + formatBpm(bpm) + ' BPM · ' + meter.label + ' · ' + bars + (bars === 1 ? ' bar' : ' bars') + ' · ' + formatLabel);
+      exportHint.classList.remove('error');
+      exportHint.textContent = formatLabel + ' created · ' + rendered.duration.toFixed(1) + ' seconds · clear downbeat accent';
+    } catch (error) {
+      console.error(error);
+      const message = error && error.message ? error.message : 'Unknown encoder error.';
+      setStatus('Could not create this audio file. ' + message, true);
+      exportHint.classList.add('error');
+      exportHint.textContent = 'Could not load or run this format encoder. Check your internet connection and retry; WAV and AIFF still work without it.';
+    } finally {
+      isExportBusy = false;
+      downloadBeatLabel.textContent = 'Download beat';
+      updateExportAvailability();
+    }
+  }
+
   function clearVisualTimeouts() {
     visualTimeouts.forEach(id => clearTimeout(id));
     visualTimeouts = [];
@@ -432,9 +889,9 @@
     if (!bpm || !meter) {
       stop(false); setStatus('Fix the highlighted setting, then press Start.', true); return;
     }
-    if (audio.currentTime < nextTime - 0.03) {
-      scheduler = setTimeout(() => scheduleBeat(token), 15); return;
-    }
+    // Queue beats as soon as they enter the 120 ms look-ahead window.
+    // The old guard deferred the first beat until only ~30 ms remained,
+    // giving it much less scheduling headroom than later beats.
     while (nextTime < audio.currentTime + 0.12) {
       beat += 1;
       if (beat > meter.numerator) { beat = 1; bar += 1; }
@@ -476,10 +933,11 @@
     startStop.classList.remove('start-button'); startStop.classList.add('stop-button');
     playIcon.innerHTML = '<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" stroke="none"/>';
     liveChip.classList.add('playing'); liveLabel.textContent = 'PLAYING';
-    beat = 0; bar = 0;
+    beat = 0; bar = 1;
     updateMeterUi(meter);
     beatNumber.textContent = '—';
-    nextTime = audio.currentTime + 0.06;
+    // Keep the requested 60 ms lead-in; all live downbeats now share the same cached waveform.
+    nextTime = audio.currentTime + LIVE_START_LEAD_SECONDS;
     const token = ++scheduleToken;
     setStatus('Starting · ' + formatBpm(bpm) + ' BPM · ' + meter.label + ' · ' + meter.unit.toLowerCase() + ' pulse');
     scheduleBeat(token);
@@ -526,10 +984,10 @@
       } else {
         const rounded = Math.round(estimate * 100) / 100;
         bpmInput.value = rounded.toFixed(2);
-        previousInputBpm = rounded;
         readBpm(false);
         const confidence = tapTimes.length >= 5 ? 'Averaging recent taps for a steadier estimate.' : 'Keep tapping for a more stable average.';
         tapHint.textContent = 'Estimated ' + formatBpm(rounded) + ' BPM · ' + confidence;
+        updateExportAvailability();
         if (running) setStatus('Tempo updated · ' + formatBpm(rounded) + ' BPM · ' + (meterInput.value.trim() || '—'));
         else setStatus('Tap estimate · ' + formatBpm(rounded) + ' BPM · Ready to play');
       }
@@ -544,18 +1002,35 @@
   resetButton.addEventListener('click', () => {
     stop(false);
     bpmInput.value = '120.00'; meterInput.value = '4/4';
-    previousInputBpm = 120;
     resetCounter(); clearTapSequence();
     bpmHint.textContent = 'Range: 1.00–400.00 BPM'; bpmHint.classList.remove('error'); bpmInput.classList.remove('invalid');
     meterHint.textContent = 'Enter a meter such as 7/4'; meterHint.classList.remove('error'); meterInput.classList.remove('invalid');
     showTempo(120); setStatus('Ready · 120.00 BPM · 4/4');
+    updateExportAvailability();
   });
   tapTempoButton.addEventListener('click', onTapTempo);
   clearTapsButton.addEventListener('click', () => clearTapSequence('Tap sequence cleared. Tap again to measure a new tempo.'));
+  downloadBeatButton.addEventListener('click', downloadBeat);
+  exportBarsInput.addEventListener('input', updateExportAvailability);
+  exportFormatSelect.addEventListener('change', () => {
+    updateExportAvailability();
+    const format = exportFormatSelect.value;
+    if (!advancedExportInfo[format]) return;
+    const info = advancedExportInfo[format];
+    exportHint.textContent = 'Preparing the small ' + info.label + ' encoder in the background…';
+    prepareAdvancedEncoder(format).then(() => {
+      if (exportFormatSelect.value === format && !isExportBusy) updateExportAvailability();
+    }).catch(error => {
+      console.warn('PULSE encoder preload failed:', error);
+      if (exportFormatSelect.value === format && !isExportBusy) {
+        exportHint.classList.add('error');
+        exportHint.textContent = 'Could not load this encoder yet. Check your internet connection; you can still use WAV or AIFF.';
+      }
+    });
+  });
   bpmInput.addEventListener('input', () => {
     const bpm = readBpm(false);
     if (bpm !== null) {
-      previousInputBpm = bpm;
       bpmHint.textContent = 'Range: 1.00–400.00 BPM'; bpmHint.classList.remove('error'); bpmInput.classList.remove('invalid');
       showTempo(bpm);
       if (running) setStatus('Tempo updated · ' + formatBpm(bpm) + ' BPM · ' + meterInput.value.trim());
@@ -563,6 +1038,7 @@
       bpmHint.textContent = 'Enter 1.00–400.00 with up to 2 decimal places.';
       bpmHint.classList.add('error'); bpmInput.classList.add('invalid');
     }
+    updateExportAvailability();
   });
   bpmInput.addEventListener('change', () => {
     const bpm = readBpm();
@@ -577,6 +1053,7 @@
       meterInput.classList.add('invalid'); meterHint.classList.add('error');
       meterHint.textContent = 'Enter a valid meter, such as 7/4 (1–32 beats).';
     }
+    updateExportAvailability();
   });
   meterInput.addEventListener('change', () => {
     const meter = readMeter();
@@ -596,6 +1073,7 @@
 
   resetCounter();
   showTempo(120);
+  updateExportAvailability();
 })();
 </script>
 
