@@ -7,6 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080b14">
 <title>PULSE — Tap Tempo Metronome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
     color-scheme: dark;
@@ -29,7 +32,7 @@
   html { min-height: 100%; background: var(--bg); }
   body {
     margin: 0; min-height: 100vh; padding: 30px 22px 24px; color: var(--text);
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "Saira", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     background:
       radial-gradient(ellipse at 12% -4%, rgba(83, 111, 255, .21), transparent 35%),
       radial-gradient(ellipse at 94% 18%, rgba(60, 226, 195, .12), transparent 31%),
@@ -37,6 +40,8 @@
       var(--bg);
     overflow-x: hidden;
   }
+  /* Keep Saira consistent across every label, button, input and display. */
+  body, body * { font-family: "Saira", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
   button, input { font: inherit; }
   button { -webkit-tap-highlight-color: transparent; }
   .app { width: min(100%, 1040px); margin: 0 auto; }
@@ -70,7 +75,7 @@
   .setting-badge { color:#b5c2df; letter-spacing:.04em; text-transform:none; font-size:.72rem; font-weight:650; border:1px solid var(--line); background:rgba(255,255,255,.025); padding:6px 9px; border-radius:999px; }
   .tempo-block { padding:25px 0 20px; text-align:center; }
   .tempo-readout { display:flex; align-items:baseline; justify-content:center; gap:11px; margin:0; font-variant-numeric:tabular-nums; }
-  .tempo-number { font-size:clamp(4.3rem, 12vw, 7.4rem); font-weight:900; line-height:.98; letter-spacing:-.085em; background:linear-gradient(180deg, #f7fffe 8%, #8af5de 64%, #66d9ff 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 7px 25px rgba(89,237,211,.11)); }
+  .tempo-number { font-size:clamp(4.3rem, 12vw, 7.4rem); font-weight:800; line-height:1.02; letter-spacing:-0.06em; background:linear-gradient(180deg, #f7fffe 8%, #8af5de 64%, #66d9ff 100%); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 7px 25px rgba(89,237,211,.11)); }
   .tempo-unit { color:#a0b0cc; font-size:.95rem; font-weight:800; letter-spacing:.12em; }
   .tempo-caption { color:var(--muted); font-size:.78rem; margin-top:10px; }
   .tempo-input-wrap { position:relative; margin:0 auto; width:min(100%, 335px); }
@@ -187,7 +192,7 @@
       <div class="brand-mark" aria-hidden="true">
         <svg viewBox="0 0 32 32" fill="none"><path d="M4 17h4l3-9 5 17 4-12 2 4h6" stroke="#8DF5DB" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="14" stroke="rgba(141,245,219,.38)"/></svg>
       </div>
-      <div><div class="brand-name">PULSE</div><div class="brand-sub">Tap tempo · Metronome</div></div>
+      <div><div class="brand-name">PULSE</div><div class="brand-sub">SAIRA TYPEFACE · TAP TEMPO</div></div>
     </div>
     <div id="liveChip" class="live-chip"><span class="live-dot"></span><span id="liveLabel">READY TO PLAY</span></div>
   </header>
@@ -216,7 +221,7 @@
         <div>
           <label class="field-label" for="meter">Time signature <span>· meter</span></label>
           <input class="field-input" id="meter" type="text" inputmode="text" value="4/4" spellcheck="false" autocomplete="off" aria-describedby="meterHint">
-          <div class="field-help" id="meterHint">Examples: 4/4, 7/4, 7/8</div>
+          <div class="field-help" id="meterHint">Enter a meter such as 7/4</div>
         </div>
         <div>
           <label class="field-label" for="beatUnit">Beat unit <span>· note value</span></label>
@@ -346,7 +351,7 @@
     const match = raw.match(/^(\d{1,2})\s*\/\s*(1|2|4|8|16|32|64)$/);
     if (!match) {
       if (showErrors) {
-        meterHint.textContent = 'Format: numerator/denominator, e.g. 7/4.';
+        meterHint.textContent = 'Enter a meter such as 7/4';
         meterHint.classList.add('error');
         meterInput.classList.add('invalid');
       }
@@ -362,7 +367,7 @@
       }
       return null;
     }
-    meterHint.textContent = 'Examples: 4/4, 7/4, 7/8';
+    meterHint.textContent = 'Enter a meter such as 7/4';
     meterHint.classList.remove('error');
     meterInput.classList.remove('invalid');
     const unitNames = {1:'Whole note', 2:'Half note', 4:'Quarter note', 8:'Eighth note', 16:'16th note', 32:'32nd note', 64:'64th note'};
@@ -542,7 +547,7 @@
     previousInputBpm = 120;
     resetCounter(); clearTapSequence();
     bpmHint.textContent = 'Range: 1.00–400.00 BPM'; bpmHint.classList.remove('error'); bpmInput.classList.remove('invalid');
-    meterHint.textContent = 'Examples: 4/4, 7/4, 7/8'; meterHint.classList.remove('error'); meterInput.classList.remove('invalid');
+    meterHint.textContent = 'Enter a meter such as 7/4'; meterHint.classList.remove('error'); meterInput.classList.remove('invalid');
     showTempo(120); setStatus('Ready · 120.00 BPM · 4/4');
   });
   tapTempoButton.addEventListener('click', onTapTempo);
@@ -570,7 +575,7 @@
       updateMeterUi(meter);
     } else {
       meterInput.classList.add('invalid'); meterHint.classList.add('error');
-      meterHint.textContent = 'Use a valid signature, e.g. 7/4. Numerator: 1–32.';
+      meterHint.textContent = 'Enter a valid meter, such as 7/4 (1–32 beats).';
     }
   });
   meterInput.addEventListener('change', () => {
